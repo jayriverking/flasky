@@ -3,11 +3,6 @@ from flask import Blueprint
 
 # Make class Crystal
 class Crystal:
-    def __init__(self, id, name, color, powers):
-        self.id = id
-        self.name = name
-        self.color = color
-        self.powers = powers
 
 # Make Blueprint for an instance of Amethyst
 
