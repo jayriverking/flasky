@@ -6,6 +6,5 @@ def create_app():
     # import crystal_bp from routes.py file
     from .routes import crystal_bp
     app.register_blueprint(crystal_bp)
-
-
+    # return the app
     return app

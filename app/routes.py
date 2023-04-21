@@ -1,6 +1,6 @@
 # this is the routes.py file substitute (if there's multiple classes for multiple routes, you'd want a directory/file for keeping all of them together)
 
-from flask import Blueprint
+from flask import Blueprint, jsonify
 
 # Make class Crystal
 class Crystal:
@@ -22,5 +22,15 @@ crystals = [
 
 crystal_bp = Blueprint("crystals", __name__, url_prefix="/crystals")
 
-# @crystal_bp.routes("/", methods=["GET"])
-# def somefunction():
+# make a decorator & function for handling the route
+@crystal_bp.route("", methods=["GET"])
+def handle_crystals():
+    crystal_response = []
+    for crystal in crystals:
+        crystal_response.append({
+            "id": crystal.id,
+            "name": crystal.name,
+            "color": crystal.color,
+            "powers": crystal.powers
+        })
+    return jsonify(crystal_response)
