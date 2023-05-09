@@ -1,9 +1,11 @@
 # this is the routes.py file substitute (if there's multiple classes for multiple routes, you'd want a directory/file for keeping all of them together)
 from app import db
 from app.models.crystal import Crystal
+from app.models.healer import Healer
 from flask import Blueprint, jsonify, abort, make_response, request
 
 crystal_bp = Blueprint("crystals", __name__, url_prefix="/crystals")
+healer_bp = Blueprint("healers", __name__, url_prefix="/healers")
 
 # helper function: validate crystal
 def validate_model(cls, model_id):
@@ -87,3 +89,31 @@ def delete_crystal(crystal_id):
 
     return make_response(f"Crystal {crystal.id} successfully deleted")
 
+
+
+@healer_bp.route("", methods=['POST'])
+# define a route for creating a crystal resource
+def create_healer():
+    request_body = request.get_json()
+    
+    new_healer = Healer(
+        name=request_body["name"]
+    )
+    
+    db.session.add(new_healer)
+    db.session.commit()
+    
+    return jsonify(f"Yayyyy Healer {new_healer.name} successfully created!"), 201
+
+
+@healer_bp.route("", methods=["GET"])
+def read_all_healers():
+    
+    healers = Healer.query.all()
+        
+    healers_response = []
+    
+    for healer in healers:
+        healers_response.append({ "name": healer.name})
+    
+    return jsonify(healers_response)
