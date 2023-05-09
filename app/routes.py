@@ -18,7 +18,7 @@ def validate_model(cls, model_id):
     model = cls.query.get(model_id)
     # if it doesn't exist, give back 404 Not Found (+ abort mission)
     if not model:
-        abort(make_response({"message": f"{model.__name__} {crystal_id} does not exist"}, 404))
+        abort(make_response({"message": f"{cls.__name__} {model_id} does not exist"}, 404))
     # return the crystal if it exists!
     return model
 
@@ -64,12 +64,12 @@ def read_all_crystals():
 @crystal_bp.route("/<crystal_id>", methods=["GET"])
 def read_one_crystal(crystal_id):
     # Query our db
-    crystal = validate_crystal(crystal_id)
+    crystal = validate_model(Crystal, crystal_id)
     return crystal.to_dict()
 
 @crystal_bp.route("/<crystal_id>", methods=["PUT"])
 def update_crystal(crystal_id):
-    crystal = validate_crystal(crystal_id)
+    crystal = validate_model(Crystal, crystal_id)
     request_body = request.get_json()
     
     crystal.name = request_body["name"]
@@ -82,7 +82,7 @@ def update_crystal(crystal_id):
 
 @crystal_bp.route("/<crystal_id>", methods=["DELETE"])
 def delete_crystal(crystal_id):
-    crystal = validate_crystal(crystal_id)
+    crystal = validate_model(Crystal, crystal_id)
 
     db.session.delete(crystal)
     db.session.commit()
@@ -114,6 +114,40 @@ def read_all_healers():
     healers_response = []
     
     for healer in healers:
-        healers_response.append({ "name": healer.name})
+        healers_response.append({
+            "id": healer.id,
+            "name": healer.name})
     
     return jsonify(healers_response)
+
+
+@healer_bp.route("/<healer_id>/crystals", methods=["POST"])
+def create_crystal_by_id(healer_id):
+
+    healer = validate_model(Healer, healer_id)
+
+    request_body = request.get_json()
+
+    new_crystal = Crystal(
+        name=request_body["name"],
+        color=request_body["color"],
+        powers=request_body["powers"],
+        healer=healer
+    )
+
+    db.session.add(new_crystal)
+    db.session.commit()
+
+    return make_response(jsonify(f"Crystal {new_crystal.name} owned by {new_crystal.healer.name} was successfully created"), 201)
+
+
+@healer_bp.route("/<healer_id>/crystals", methods=["GET"])
+def get_all_crystals_with_id(healer_id):
+    healer = validate_model(Healer, healer_id)
+    crystal_response = []
+    for crystal in healer.crystals:
+        crystal_response.append(
+            crystal.to_dict()
+        )
+
+    return jsonify(crystal_response)
