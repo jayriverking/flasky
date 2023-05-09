@@ -17,15 +17,14 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     # set up database
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     if not test_config:
         # development environment configurations
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE_URI")
     else:
         # testing environment configurations
         app.config["TESTING"] = True
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config['SQLALCHEMY_TEST_DATABASE_URI'] = os.environ.get("SQLALCHEMY_TEST_DATABASE_URI")
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_TEST_DATABASE_URI")
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -34,5 +33,6 @@ def create_app(test_config=None):
     app.register_blueprint(crystal_bp)
 
     from app.models.crystal import Crystal
+    from app.models.healer import Healer
     # return the app
     return app

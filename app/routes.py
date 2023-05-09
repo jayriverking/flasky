@@ -6,33 +6,33 @@ from flask import Blueprint, jsonify, abort, make_response, request
 crystal_bp = Blueprint("crystals", __name__, url_prefix="/crystals")
 
 # helper function: validate crystal
-def validate_crystal(crystal_id):
+def validate_model(cls, model_id):
     # if crystal_id isn't an integer, give back 400 (+ abort mission)
     try:
-        crystal_id = int(crystal_id)
+        model_id = int(model_id)
     except:
-        abort(make_response({"message": f"{crystal_id} is invalid"}, 400))
+        abort(make_response({"message": f"{model_id} is invalid"}, 400))
     # query the crystal
-    crystal = Crystal.query.get(crystal_id)
+    model = cls.query.get(model_id)
     # if it doesn't exist, give back 404 Not Found (+ abort mission)
-    if not crystal:
-        abort(make_response({"message": f"Crystal {crystal_id} does not exist"}, 404))
+    if not model:
+        abort(make_response({"message": f"{model.__name__} {crystal_id} does not exist"}, 404))
     # return the crystal if it exists!
-    return crystal
+    return model
 
 
 @crystal_bp.route("", methods=["POST"])
 def make_new_crystal():
+    # get data from user
     request_body = request.get_json()
-    new_crystal = Crystal(
-        name = request_body["name"],
-        color = request_body["color"],
-        powers = request_body["powers"]
-    )
+    # make a new crystal using from_dict method
+    new_crystal = Crystal.from_dict(request_body)
+    # adding to database
     db.session.add(new_crystal)
+    # save to database
     db.session.commit()
-
-    return make_response(f"Crystal {new_crystal.name} successfully created.", 201)
+    # return message and "201 Created" status code
+    return jsonify(f"Crystal {new_crystal.name} successfully created."), 201
 
 # get all crystals!
 @crystal_bp.route("", methods=["GET"])
@@ -52,12 +52,7 @@ def read_all_crystals():
     crystal_response = []
     for crystal in crystals:
         crystal_response.append(
-            {
-                "id":crystal.id,
-                "name": crystal.name,
-                "color": crystal.color,
-                "powers": crystal.powers
-            }
+            crystal.to_dict()
         )
     return jsonify(crystal_response)
 
@@ -68,12 +63,7 @@ def read_all_crystals():
 def read_one_crystal(crystal_id):
     # Query our db
     crystal = validate_crystal(crystal_id)
-    return {
-        "id": crystal.id,
-        "name": crystal.name,
-        "color": crystal.color,
-        "powers": crystal.powers
-    }
+    return crystal.to_dict()
 
 @crystal_bp.route("/<crystal_id>", methods=["PUT"])
 def update_crystal(crystal_id):
